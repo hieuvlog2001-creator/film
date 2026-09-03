@@ -1,8 +1,11 @@
-# MisaMod Film — FIXED17
+# MisaMod Film – iOS unsigned build
 
-Unsigned iOS IPA build.
+Native full-screen iOS app shell for MisaMod Film. It uses WKWebView internally without Safari/SFSafariViewController UI, so the user sees an app screen rather than browser chrome.
 
-This version uses `SFSafariViewController` as the primary web container so the site is loaded through the same Safari web stack/network path instead of WKWebView. This is intended to resolve WKWebView `NSURLErrorDomain -1004` connection failures when Safari can reach the site.
+- Bundle ID: `site.misamod.film`
+- iOS 15+
+- Unsigned IPA for eSign
+- Website: `https://misamod.site`
+- AppIcon: MisaMod Film
 
-Bundle ID: `site.misamod.film`
-Version: `1.0.8` (Build `9`)
+GitHub Actions artifact: `MisaMod-Film-unsigned-IPA`
