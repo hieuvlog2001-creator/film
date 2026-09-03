@@ -1,14 +1,10 @@
-# MisaMod Film — FIXED21
+# MisaMod Film — iOS Native App Shell v22
 
-Unsigned iOS app for eSign.
-
-- Native UIKit app shell
-- Full-screen WKWebView inside the app (no Safari UI)
-- Tries HTTPS/HTTP and www fallbacks for misamod.site
-- AppIcon 1024x1024
+- Native UIKit app shell, full-screen WKWebView (no Safari UI).
+- Loads https://misamod.site with HTTPS/HTTP fallback.
+- UI page zoom reduced to 86% so the website appears smaller and more balanced on iPhone.
 - Bundle ID: site.misamod.film
-- Version 1.1.2 (Build 13)
-- iOS 15+
-- GitHub Actions produces MisaModFilm-unsigned.ipa
+- Unsigned IPA workflow for GitHub Actions/eSign.
 
-If all four endpoints fail with NSURLError -1004, the iPhone/network cannot establish a connection to the server; an app wrapper cannot bypass an unreachable server.
+## GitHub Actions
+The included workflow builds an unsigned IPA on macOS with Xcode and uploads the IPA artifact.

@@ -38,6 +38,9 @@ final class ViewController: UIViewController, WKNavigationDelegate, WKUIDelegate
         webView.uiDelegate = self
         webView.allowsBackForwardNavigationGestures = true
         webView.scrollView.alwaysBounceVertical = true
+        // Thu nhỏ giao diện web trong app để bố cục trên iPhone cân đối hơn.
+        // 0.86 = khoảng 86% kích thước hiện tại, vẫn giữ toàn bộ giao diện trong WKWebView.
+        webView.pageZoom = 0.86
         webView.translatesAutoresizingMaskIntoConstraints = false
         view.addSubview(webView)
         NSLayoutConstraint.activate([
