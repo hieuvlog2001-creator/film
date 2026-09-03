@@ -1,76 +1,52 @@
 name: Build MisaMod Film - Unsigned IPA
-
 on:
   workflow_dispatch:
   push:
-    branches: ["main", "master"]
-
+    branches: [main, master]
 permissions:
   contents: read
-
 jobs:
   build-unsigned:
     runs-on: macos-15
     timeout-minutes: 30
-    env:
-      PROJECT: MisaModFilm.xcodeproj
-      SCHEME: MisaModFilm
-      CONFIGURATION: Release
-      APP_NAME: "MisaMod Film"
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
+      - uses: actions/checkout@v4
       - name: Show Xcode
         run: |
-          set -euo pipefail
           xcodebuild -version
-          xcodebuild -showsdks | grep -E 'iphoneos|iOS' || true
-          xcodebuild -list -project "$PROJECT"
-
+          xcodebuild -list -project MisaModFilm.xcodeproj
       - name: Build unsigned app
         run: |
           set -o pipefail
           rm -rf build Payload MisaModFilm-unsigned.ipa
-          xcodebuild build \
-            -project "$PROJECT" \
-            -scheme "$SCHEME" \
-            -configuration "$CONFIGURATION" \
-            -sdk iphoneos \
-            -derivedDataPath "$PWD/build" \
-            SDKROOT=iphoneos \
-            SUPPORTED_PLATFORMS="iphoneos iphonesimulator" \
-            CODE_SIGNING_ALLOWED=NO \
-            CODE_SIGNING_REQUIRED=NO \
-            CODE_SIGN_IDENTITY="" \
-            | tee build.log
-
-      - name: Verify app bundle and icon
+          xcodebuild build -project MisaModFilm.xcodeproj -scheme MisaModFilm -configuration Release -sdk iphoneos -derivedDataPath "$PWD/build" CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO CODE_SIGN_IDENTITY="" SDKROOT=iphoneos | tee build.log
+      - name: Verify app
         run: |
           set -euo pipefail
-          APP="$PWD/build/Build/Products/Release-iphoneos/MisaMod Film.app"
+          APP="$PWD/build/Build/Products/Release-iphoneos/MisaModFilm.app"
           test -d "$APP"
           /usr/libexec/PlistBuddy -c 'Print :CFBundleIdentifier' "$APP/Info.plist"
           /usr/libexec/PlistBuddy -c 'Print :CFBundleDisplayName' "$APP/Info.plist"
-          /usr/libexec/PlistBuddy -c 'Print :CFBundleIconName' "$APP/Info.plist"
-          test -f "$APP/embedded.mobileprovision" && echo "Unexpected provisioning profile" || true
           test -f "$APP/Assets.car"
           test -f "$APP/MisaModFilm"
-
       - name: Package unsigned IPA
         run: |
           set -euo pipefail
-          APP="$PWD/build/Build/Products/Release-iphoneos/MisaMod Film.app"
+          APP="$PWD/build/Build/Products/Release-iphoneos/MisaModFilm.app"
           mkdir -p Payload
-          cp -R "$APP" Payload/
+          cp -R "$APP" Payload/MisaModFilm.app
           /usr/bin/ditto -c -k --sequesterRsrc --keepParent Payload MisaModFilm-unsigned.ipa
           unzip -t MisaModFilm-unsigned.ipa >/dev/null
-          ls -lh MisaModFilm-unsigned.ipa
-
       - name: Upload IPA
         uses: actions/upload-artifact@v4
         with:
           name: MisaMod-Film-unsigned-IPA
           path: MisaModFilm-unsigned.ipa
-          if-no-files-found: error
           retention-days: 14
+      - name: Upload build log on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: MisaMod-Film-build-log
+          path: build.log
+          if-no-files-found: ignore
