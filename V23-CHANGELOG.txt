@@ -1,0 +1,7 @@
+MisaMod Film V23 — Mobile header alignment fix
+
+- Fixed vertical alignment between the MisaMod Film logo mark and brand text on iPhone.
+- Fixed mobile drawer brand mark/text alignment.
+- Fixed account dropdown header name/email/plan vertical alignment.
+- Preserved v22 86% page zoom and native full-screen WKWebView shell.
+- Build number: 14.

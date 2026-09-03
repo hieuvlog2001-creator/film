@@ -170,8 +170,38 @@ final class ViewController: UIViewController, WKNavigationDelegate, WKUIDelegate
         spinner.startAnimating()
     }
 
+    private func applyMobileHeaderFix() {
+        let js = """
+        (function(){
+          const styleId = 'mmf-ios-header-fix';
+          let s = document.getElementById(styleId);
+          if (!s) { s = document.createElement('style'); s.id = styleId; document.head.appendChild(s); }
+          s.textContent = `
+            @media (max-width:700px){
+              .nav{align-items:center!important;}
+              .logo{align-items:center!important;height:42px!important;line-height:1!important;gap:9px!important;}
+              .logo .brandMark{flex:0 0 31px!important;width:31px!important;height:31px!important;margin:0!important;}
+              .logo .brandText{display:flex!important;align-items:center!important;height:31px!important;line-height:31px!important;margin:0!important;transform:translateY(1px)!important;}
+              .logo .brandText em{line-height:inherit!important;}
+              .mobileMenuBtn{align-self:center!important;margin:0!important;}
+              .right{align-items:center!important;}
+              .mobileDrawerBrand{align-items:center!important;line-height:1!important;}
+              .mobileDrawerBrand .brandMark{margin:0!important;flex:0 0 38px!important;}
+              .accountUser{align-items:center!important;}
+              .accountUser>div{display:flex!important;flex-direction:column!important;justify-content:center!important;min-width:0!important;}
+              .accountUser b{line-height:1.15!important;margin:0!important;}
+              .accountUser small{line-height:1.2!important;margin-top:4px!important;}
+              .planPill{align-self:flex-start!important;}
+            }
+          `;
+        })();
+        """
+        webView.evaluateJavaScript(js, completionHandler: nil)
+    }
+
     func webView(_ webView: WKWebView, didCommit navigation: WKNavigation!) {
         loadingView.isHidden = true
+        applyMobileHeaderFix()
     }
 
     func webView(_ webView: WKWebView, didFinish navigation: WKNavigation!) {
