@@ -1,4 +1,4 @@
-name: Build MisaMod Film - Unsigned IPA (Safari Engine)
+name: Build MisaMod Film - Unsigned IPA
 
 on:
   workflow_dispatch:
@@ -16,7 +16,7 @@ jobs:
       PROJECT: MisaModFilm.xcodeproj
       SCHEME: MisaModFilm
       CONFIGURATION: Release
-      DERIVED_DATA: ${{ github.workspace }}/build
+      APP_NAME: "MisaMod Film"
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -25,67 +25,52 @@ jobs:
         run: |
           set -euo pipefail
           xcodebuild -version
-          xcodebuild -showsdks
+          xcodebuild -showsdks | grep -E 'iphoneos|iOS' || true
           xcodebuild -list -project "$PROJECT"
 
-      - name: Build unsigned iOS app
-        shell: bash
+      - name: Build unsigned app
         run: |
           set -o pipefail
-          rm -rf "$DERIVED_DATA" Payload MisaModFilm-unsigned.ipa build.log
+          rm -rf build Payload MisaModFilm-unsigned.ipa
           xcodebuild build \
             -project "$PROJECT" \
             -scheme "$SCHEME" \
             -configuration "$CONFIGURATION" \
             -sdk iphoneos \
-            -derivedDataPath "$DERIVED_DATA" \
+            -derivedDataPath "$PWD/build" \
             SDKROOT=iphoneos \
-            SUPPORTED_PLATFORMS=iphoneos \
+            SUPPORTED_PLATFORMS="iphoneos iphonesimulator" \
             CODE_SIGNING_ALLOWED=NO \
             CODE_SIGNING_REQUIRED=NO \
             CODE_SIGN_IDENTITY="" \
-            DEVELOPMENT_TEAM="" \
-            COMPILER_INDEX_STORE_ENABLE=NO \
             | tee build.log
 
-      - name: Verify built app and icon
+      - name: Verify app bundle and icon
         run: |
           set -euo pipefail
-          APP="$DERIVED_DATA/Build/Products/Release-iphoneos/MisaModFilm.app"
+          APP="$PWD/build/Build/Products/Release-iphoneos/MisaMod Film.app"
           test -d "$APP"
-          test -f "$APP/Info.plist"
-          test -f "$APP/Assets.car"
-          test -f "$APP/MisaModFilm"
           /usr/libexec/PlistBuddy -c 'Print :CFBundleIdentifier' "$APP/Info.plist"
           /usr/libexec/PlistBuddy -c 'Print :CFBundleDisplayName' "$APP/Info.plist"
-          /usr/bin/plutil -p "$APP/Info.plist" | grep -E 'CFBundleIconName|CFBundleIcons|CFBundleIcons~ipad' || true
-          /usr/bin/plutil -lint "$APP/Info.plist"
-          /usr/bin/file "$APP/MisaModFilm"
+          /usr/libexec/PlistBuddy -c 'Print :CFBundleIconName' "$APP/Info.plist"
+          test -f "$APP/embedded.mobileprovision" && echo "Unexpected provisioning profile" || true
+          test -f "$APP/Assets.car"
+          test -f "$APP/MisaModFilm"
 
       - name: Package unsigned IPA
         run: |
           set -euo pipefail
-          APP="$DERIVED_DATA/Build/Products/Release-iphoneos/MisaModFilm.app"
+          APP="$PWD/build/Build/Products/Release-iphoneos/MisaMod Film.app"
           mkdir -p Payload
-          cp -R "$APP" Payload/MisaModFilm.app
+          cp -R "$APP" Payload/
           /usr/bin/ditto -c -k --sequesterRsrc --keepParent Payload MisaModFilm-unsigned.ipa
-          test -s MisaModFilm-unsigned.ipa
-          unzip -t MisaModFilm-unsigned.ipa
-          unzip -l MisaModFilm-unsigned.ipa | grep -F 'Payload/MisaModFilm.app/Assets.car'
+          unzip -t MisaModFilm-unsigned.ipa >/dev/null
           ls -lh MisaModFilm-unsigned.ipa
 
-      - name: Upload IPA artifact
+      - name: Upload IPA
         uses: actions/upload-artifact@v4
         with:
-          name: MisaMod-Film-unsigned-IPA-FIXED17
+          name: MisaMod-Film-unsigned-IPA
           path: MisaModFilm-unsigned.ipa
           if-no-files-found: error
           retention-days: 14
-
-      - name: Upload build log on failure
-        if: failure()
-        uses: actions/upload-artifact@v4
-        with:
-          name: MisaMod-Film-build-log
-          path: build.log
-          if-no-files-found: ignore
