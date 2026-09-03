@@ -1,4 +1,4 @@
-name: Build MisaMod Film - Unsigned IPA
+name: Build MisaMod Film - Unsigned IPA (Native)
 on:
   workflow_dispatch:
   push:
