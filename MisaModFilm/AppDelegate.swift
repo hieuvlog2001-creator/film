@@ -43,11 +43,14 @@ final class ViewController: UIViewController, WKNavigationDelegate, WKUIDelegate
         webView.pageZoom = 0.86
         webView.translatesAutoresizingMaskIntoConstraints = false
         view.addSubview(webView)
+        // Keep the website below the iOS status bar and above the home indicator.
+        // This prevents the web header/menu from being covered by the system UI.
+        let safe = view.safeAreaLayoutGuide
         NSLayoutConstraint.activate([
             webView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
             webView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
-            webView.topAnchor.constraint(equalTo: view.topAnchor),
-            webView.bottomAnchor.constraint(equalTo: view.bottomAnchor)
+            webView.topAnchor.constraint(equalTo: safe.topAnchor),
+            webView.bottomAnchor.constraint(equalTo: safe.bottomAnchor)
         ])
         buildLoadingView()
         buildErrorView()
@@ -58,11 +61,12 @@ final class ViewController: UIViewController, WKNavigationDelegate, WKUIDelegate
         loadingView.backgroundColor = UIColor.black.withAlphaComponent(0.94)
         loadingView.translatesAutoresizingMaskIntoConstraints = false
         view.addSubview(loadingView)
+        let safe = view.safeAreaLayoutGuide
         NSLayoutConstraint.activate([
             loadingView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
             loadingView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
-            loadingView.topAnchor.constraint(equalTo: view.topAnchor),
-            loadingView.bottomAnchor.constraint(equalTo: view.bottomAnchor)
+            loadingView.topAnchor.constraint(equalTo: safe.topAnchor),
+            loadingView.bottomAnchor.constraint(equalTo: safe.bottomAnchor)
         ])
         spinner.translatesAutoresizingMaskIntoConstraints = false
         spinner.color = .white
@@ -86,11 +90,12 @@ final class ViewController: UIViewController, WKNavigationDelegate, WKUIDelegate
         errorView.translatesAutoresizingMaskIntoConstraints = false
         errorView.isHidden = true
         view.addSubview(errorView)
+        let safe = view.safeAreaLayoutGuide
         NSLayoutConstraint.activate([
             errorView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
             errorView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
-            errorView.topAnchor.constraint(equalTo: view.topAnchor),
-            errorView.bottomAnchor.constraint(equalTo: view.bottomAnchor)
+            errorView.topAnchor.constraint(equalTo: safe.topAnchor),
+            errorView.bottomAnchor.constraint(equalTo: safe.bottomAnchor)
         ])
         let title = UILabel()
         title.text = "Không thể tải MisaMod Film"

@@ -1,0 +1,7 @@
+MisaMod Film FIXED24
+
+- Fixed iPhone top-left/header overlap with the iOS status bar.
+- WKWebView now starts at the safe-area top and ends at the safe-area bottom.
+- Prevents the hamburger/menu and logo from being hidden behind the system clock/notch.
+- Prevents bottom navigation from sitting under the home indicator.
+- Build 15.
