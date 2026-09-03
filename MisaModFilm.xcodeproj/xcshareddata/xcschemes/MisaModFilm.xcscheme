@@ -13,7 +13,7 @@
             <BuildableReference
                BuildableIdentifier = "primary"
                BlueprintIdentifier = "A00000000000000000000005"
-               BuildableName = "MisaMod Film.app"
+               BuildableName = "MisaModFilm.app"
                BlueprintName = "MisaMod Film"
                ReferencedContainer = "container:MisaModFilm.xcodeproj">
             </BuildableReference>

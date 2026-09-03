@@ -1,16 +1,12 @@
-# MisaMod Film iOS — FIXED13
-
-Unsigned iOS device IPA for eSign/self-signing.
+# MisaMod Film — GitHub Unsigned IPA FIXED14
 
 - Bundle ID: `site.misamod.film`
-- iOS 15+
-- Complete AppIcon asset set included (iPhone, iPad, 1024px)
-- `CFBundleIconName = AppIcon`
-- Native iPhone user agent (no forced custom Safari UA)
-- WKWebView with JavaScript, persistent cookies and inline video
-- Detailed network error and Safari fallback
-- GitHub Actions builds and packages an **unsigned** `iphoneos` IPA
-- No Apple signing secrets are required
+- Display name: `MisaMod Film`
+- Version: `1.0.5 (6)`
+- iOS deployment target: 15.0
+- Website: `https://misamod.site`
+- Unsigned IPA for eSign
 
-Run **Actions → Build MisaMod Film - Unsigned IPA** and download `MisaMod-Film-unsigned-IPA`.
-Then sign the resulting `.ipa` with eSign or another compatible signing tool.
+Workflow: `.github/workflows/build-ipa.yml`
+
+The workflow builds an iPhoneOS Release app without Apple signing, verifies the bundle and AppIcon asset, then packages `MisaModFilm-unsigned.ipa`.
