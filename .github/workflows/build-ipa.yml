@@ -15,20 +15,37 @@ jobs:
         run: |
           xcodebuild -version
           xcodebuild -list -project MisaModFilm.xcodeproj
+      - name: Validate AppIcon source
+        run: |
+          set -euo pipefail
+          /usr/bin/sips -g pixelWidth -g pixelHeight MisaModFilm/Assets.xcassets/AppIcon.appiconset/AppIcon-1024.png
+          cat MisaModFilm/Assets.xcassets/AppIcon.appiconset/Contents.json
       - name: Build unsigned app
         run: |
           set -o pipefail
           rm -rf build Payload MisaModFilm-unsigned.ipa
-          xcodebuild build -project MisaModFilm.xcodeproj -scheme MisaModFilm -configuration Release -sdk iphoneos -derivedDataPath "$PWD/build" CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO CODE_SIGN_IDENTITY="" SDKROOT=iphoneos | tee build.log
+          xcodebuild build \
+            -project MisaModFilm.xcodeproj \
+            -scheme MisaModFilm \
+            -configuration Release \
+            -sdk iphoneos \
+            -derivedDataPath "$PWD/build" \
+            CODE_SIGNING_ALLOWED=NO \
+            CODE_SIGNING_REQUIRED=NO \
+            CODE_SIGN_IDENTITY="" \
+            SDKROOT=iphoneos \
+            ASSETCATALOG_COMPILER_APPICON_NAME=AppIcon \
+            | tee build.log
       - name: Verify app
         run: |
           set -euo pipefail
           APP="$PWD/build/Build/Products/Release-iphoneos/MisaModFilm.app"
           test -d "$APP"
-          /usr/libexec/PlistBuddy -c 'Print :CFBundleIdentifier' "$APP/Info.plist"
-          /usr/libexec/PlistBuddy -c 'Print :CFBundleDisplayName' "$APP/Info.plist"
           test -f "$APP/Assets.car"
           test -f "$APP/MisaModFilm"
+          /usr/libexec/PlistBuddy -c 'Print :CFBundleIdentifier' "$APP/Info.plist"
+          /usr/libexec/PlistBuddy -c 'Print :CFBundleIconName' "$APP/Info.plist"
+          /usr/bin/file "$APP/MisaModFilm"
       - name: Package unsigned IPA
         run: |
           set -euo pipefail
