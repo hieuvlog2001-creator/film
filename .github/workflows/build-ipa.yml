@@ -58,7 +58,11 @@ jobs:
           test -f "$APP/MisaModFilm"
           /usr/libexec/PlistBuddy -c 'Print :CFBundleIdentifier' "$APP/Info.plist"
           /usr/libexec/PlistBuddy -c 'Print :CFBundleDisplayName' "$APP/Info.plist"
+          # Ensure the final unsigned app has an explicit iOS icon name.
+          /usr/libexec/PlistBuddy -c 'Delete :CFBundleIconName' "$APP/Info.plist" 2>/dev/null || true
+          /usr/libexec/PlistBuddy -c 'Add :CFBundleIconName string AppIcon' "$APP/Info.plist"
           /usr/libexec/PlistBuddy -c 'Print :CFBundleIconName' "$APP/Info.plist"
+          /usr/bin/plutil -lint "$APP/Info.plist"
           /usr/bin/file "$APP/MisaModFilm"
 
       - name: Package unsigned IPA
@@ -76,7 +80,7 @@ jobs:
       - name: Upload IPA artifact
         uses: actions/upload-artifact@v4
         with:
-          name: MisaMod-Film-unsigned-IPA
+          name: MisaMod-Film-unsigned-IPA-FIXED16
           path: MisaModFilm-unsigned.ipa
           if-no-files-found: error
           retention-days: 14
