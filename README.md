@@ -1,12 +1,12 @@
-# MisaMod Film — GitHub Unsigned IPA FIXED14
+# MisaMod Film - FIXED15
 
-- Bundle ID: `site.misamod.film`
-- Display name: `MisaMod Film`
-- Version: `1.0.5 (6)`
-- iOS deployment target: 15.0
-- Website: `https://misamod.site`
-- Unsigned IPA for eSign
+Unsigned iOS IPA build for eSign.
 
-Workflow: `.github/workflows/build-ipa.yml`
+- Bundle ID: site.misamod.film
+- Display Name: MisaMod Film
+- Version: 1.0.6 (7)
+- iOS 15+
+- Website: https://misamod.site
+- GitHub Actions: macos-15
 
-The workflow builds an iPhoneOS Release app without Apple signing, verifies the bundle and AppIcon asset, then packages `MisaModFilm-unsigned.ipa`.
+Run the workflow and download `MisaMod-Film-unsigned-IPA`, then sign the IPA with eSign.
