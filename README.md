@@ -1,12 +1,8 @@
-# MisaMod Film - FIXED15
+# MisaMod Film — FIXED16
 
-Unsigned iOS IPA build for eSign.
+Fixes the FIXED15 verification failure. The Xcode build succeeds, but generated Info.plist did not contain CFBundleIconName. This workflow explicitly adds `CFBundleIconName=AppIcon` to the final unsigned app before packaging, then validates it.
 
-- Bundle ID: site.misamod.film
-- Display Name: MisaMod Film
-- Version: 1.0.6 (7)
-- iOS 15+
-- Website: https://misamod.site
-- GitHub Actions: macos-15
-
-Run the workflow and download `MisaMod-Film-unsigned-IPA`, then sign the IPA with eSign.
+Bundle ID: `site.misamod.film`
+Version: 1.0.7 (Build 8)
+iOS 15+
+Unsigned IPA for eSign
