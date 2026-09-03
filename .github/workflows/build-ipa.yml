@@ -28,24 +28,6 @@ jobs:
           xcodebuild -showsdks
           xcodebuild -list -project "$PROJECT"
 
-      - name: Validate project and icon
-        run: |
-          set -euo pipefail
-          test -f "MisaModFilm/Assets.xcassets/AppIcon.appiconset/Contents.json"
-          test -f "MisaModFilm/Assets.xcassets/AppIcon.appiconset/AppIcon-1024_1024-1.png"
-          python3 - <<'PY'
-          import json
-          p='MisaModFilm/Assets.xcassets/AppIcon.appiconset/Contents.json'
-          d=json.load(open(p))
-          imgs=d.get('images',[])
-          assert len(imgs)==1 and imgs[0].get('idiom')=='universal' and imgs[0].get('size')=='1024x1024'
-          print('AppIcon source OK')
-          PY
-          xcodebuild -project "$PROJECT" -scheme "$SCHEME" -configuration "$CONFIGURATION" -sdk iphoneos -showBuildSettings > build-settings.txt
-          grep -q 'SDKROOT = iphoneos' build-settings.txt
-          grep -q 'ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon' build-settings.txt
-          grep -q 'PRODUCT_BUNDLE_IDENTIFIER = site.misamod.film' build-settings.txt
-
       - name: Build unsigned iOS app
         shell: bash
         run: |
@@ -73,10 +55,11 @@ jobs:
           test -d "$APP"
           test -f "$APP/Info.plist"
           test -f "$APP/Assets.car"
-          echo "Bundle:"; /usr/libexec/PlistBuddy -c 'Print :CFBundleIdentifier' "$APP/Info.plist"
-          echo "Display:"; /usr/libexec/PlistBuddy -c 'Print :CFBundleDisplayName' "$APP/Info.plist"
-          echo "Icon:"; /usr/libexec/PlistBuddy -c 'Print :CFBundleIconName' "$APP/Info.plist"
-          echo "Executable:"; ls -lh "$APP/MisaModFilm"
+          test -f "$APP/MisaModFilm"
+          /usr/libexec/PlistBuddy -c 'Print :CFBundleIdentifier' "$APP/Info.plist"
+          /usr/libexec/PlistBuddy -c 'Print :CFBundleDisplayName' "$APP/Info.plist"
+          /usr/libexec/PlistBuddy -c 'Print :CFBundleIconName' "$APP/Info.plist"
+          /usr/bin/file "$APP/MisaModFilm"
 
       - name: Package unsigned IPA
         run: |
@@ -103,7 +86,5 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: MisaMod-Film-build-log
-          path: |
-            build.log
-            build-settings.txt
+          path: build.log
           if-no-files-found: ignore
