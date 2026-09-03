@@ -1,7 +1,12 @@
 import UIKit
 import WebKit
 
-private let filmURL = URL(string: "https://misamod.site")!
+private let filmURLs: [URL] = [
+    URL(string: "https://misamod.site")!,
+    URL(string: "https://www.misamod.site")!,
+    URL(string: "http://misamod.site")!,
+    URL(string: "http://www.misamod.site")!
+]
 
 final class ViewController: UIViewController, WKNavigationDelegate, WKUIDelegate {
     private let webView: WKWebView
@@ -11,7 +16,8 @@ final class ViewController: UIViewController, WKNavigationDelegate, WKUIDelegate
     private let errorView = UIView()
     private let errorLabel = UILabel()
     private let retryButton = UIButton(type: .system)
-    private let safariButton = UIButton(type: .system)
+    private var currentURLIndex = 0
+    private var lastErrorCode = 0
 
     init() {
         let config = WKWebViewConfiguration()
@@ -46,7 +52,7 @@ final class ViewController: UIViewController, WKNavigationDelegate, WKUIDelegate
     }
 
     private func buildLoadingView() {
-        loadingView.backgroundColor = UIColor.black.withAlphaComponent(0.92)
+        loadingView.backgroundColor = UIColor.black.withAlphaComponent(0.94)
         loadingView.translatesAutoresizingMaskIntoConstraints = false
         view.addSubview(loadingView)
         NSLayoutConstraint.activate([
@@ -70,11 +76,10 @@ final class ViewController: UIViewController, WKNavigationDelegate, WKUIDelegate
             loadingLabel.topAnchor.constraint(equalTo: spinner.bottomAnchor, constant: 16),
             loadingLabel.centerXAnchor.constraint(equalTo: loadingView.centerXAnchor)
         ])
-        spinner.startAnimating()
     }
 
     private func buildErrorView() {
-        errorView.backgroundColor = UIColor.black.withAlphaComponent(0.96)
+        errorView.backgroundColor = UIColor.black.withAlphaComponent(0.97)
         errorView.translatesAutoresizingMaskIntoConstraints = false
         errorView.isHidden = true
         view.addSubview(errorView)
@@ -91,66 +96,75 @@ final class ViewController: UIViewController, WKNavigationDelegate, WKUIDelegate
         title.textAlignment = .center
         title.translatesAutoresizingMaskIntoConstraints = false
         errorView.addSubview(title)
-        errorLabel.text = "Không thể kết nối máy chủ."
-        errorLabel.textColor = UIColor.white.withAlphaComponent(0.75)
-        errorLabel.font = .systemFont(ofSize: 16)
+
+        errorLabel.textColor = UIColor.white.withAlphaComponent(0.78)
+        errorLabel.font = .systemFont(ofSize: 15)
         errorLabel.numberOfLines = 0
         errorLabel.textAlignment = .center
         errorLabel.translatesAutoresizingMaskIntoConstraints = false
         errorView.addSubview(errorLabel)
+
         retryButton.setTitle("Thử lại", for: .normal)
         retryButton.titleLabel?.font = .systemFont(ofSize: 17, weight: .semibold)
-        retryButton.backgroundColor = UIColor.systemBlue
+        retryButton.backgroundColor = .systemBlue
         retryButton.tintColor = .white
         retryButton.layer.cornerRadius = 14
         retryButton.translatesAutoresizingMaskIntoConstraints = false
         retryButton.addTarget(self, action: #selector(retry), for: .touchUpInside)
         errorView.addSubview(retryButton)
-        safariButton.setTitle("Mở bằng Safari", for: .normal)
-        safariButton.titleLabel?.font = .systemFont(ofSize: 17, weight: .semibold)
-        safariButton.backgroundColor = UIColor(white: 0.16, alpha: 1)
-        safariButton.tintColor = .white
-        safariButton.layer.cornerRadius = 14
-        safariButton.translatesAutoresizingMaskIntoConstraints = false
-        safariButton.addTarget(self, action: #selector(openSafari), for: .touchUpInside)
-        errorView.addSubview(safariButton)
+
         NSLayoutConstraint.activate([
             title.centerXAnchor.constraint(equalTo: errorView.centerXAnchor),
-            title.centerYAnchor.constraint(equalTo: errorView.centerYAnchor, constant: -105),
+            title.centerYAnchor.constraint(equalTo: errorView.centerYAnchor, constant: -95),
             title.leadingAnchor.constraint(greaterThanOrEqualTo: errorView.leadingAnchor, constant: 24),
             title.trailingAnchor.constraint(lessThanOrEqualTo: errorView.trailingAnchor, constant: -24),
             errorLabel.topAnchor.constraint(equalTo: title.bottomAnchor, constant: 18),
-            errorLabel.leadingAnchor.constraint(equalTo: errorView.leadingAnchor, constant: 30),
-            errorLabel.trailingAnchor.constraint(equalTo: errorView.trailingAnchor, constant: -30),
-            retryButton.topAnchor.constraint(equalTo: errorLabel.bottomAnchor, constant: 30),
+            errorLabel.leadingAnchor.constraint(equalTo: errorView.leadingAnchor, constant: 28),
+            errorLabel.trailingAnchor.constraint(equalTo: errorView.trailingAnchor, constant: -28),
+            retryButton.topAnchor.constraint(equalTo: errorLabel.bottomAnchor, constant: 28),
             retryButton.leadingAnchor.constraint(equalTo: errorView.leadingAnchor, constant: 40),
             retryButton.trailingAnchor.constraint(equalTo: errorView.trailingAnchor, constant: -40),
-            retryButton.heightAnchor.constraint(equalToConstant: 54),
-            safariButton.topAnchor.constraint(equalTo: retryButton.bottomAnchor, constant: 12),
-            safariButton.leadingAnchor.constraint(equalTo: retryButton.leadingAnchor),
-            safariButton.trailingAnchor.constraint(equalTo: retryButton.trailingAnchor),
-            safariButton.heightAnchor.constraint(equalToConstant: 54)
+            retryButton.heightAnchor.constraint(equalToConstant: 54)
         ])
     }
 
     private func loadSite() {
+        currentURLIndex = 0
+        lastErrorCode = 0
         errorView.isHidden = true
         loadingView.isHidden = false
         spinner.startAnimating()
-        var request = URLRequest(url: filmURL, cachePolicy: .reloadIgnoringLocalAndRemoteCacheData, timeoutInterval: 45)
+        attemptCurrentURL()
+    }
+
+    private func attemptCurrentURL() {
+        guard currentURLIndex < filmURLs.count else {
+            spinner.stopAnimating()
+            loadingView.isHidden = true
+            errorLabel.text = "Không thể kết nối MisaMod Film.\n\nĐã thử nhiều đường dẫn HTTPS/HTTP.\nMã lỗi cuối: \(lastErrorCode)"
+            errorView.isHidden = false
+            return
+        }
+        let url = filmURLs[currentURLIndex]
+        loadingLabel.text = "Đang kết nối MisaMod Film…"
+        var request = URLRequest(url: url, cachePolicy: .reloadIgnoringLocalAndRemoteCacheData, timeoutInterval: 20)
         request.setValue("1", forHTTPHeaderField: "DNT")
+        request.setValue("Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Mobile/15E148", forHTTPHeaderField: "User-Agent")
         webView.load(request)
+    }
+
+    private func nextURL(after error: Error) {
+        lastErrorCode = (error as NSError).code
+        currentURLIndex += 1
+        attemptCurrentURL()
     }
 
     @objc private func retry() { loadSite() }
 
-    @objc private func openSafari() {
-        UIApplication.shared.open(filmURL)
-    }
-
     func webView(_ webView: WKWebView, didStartProvisionalNavigation navigation: WKNavigation!) {
         loadingView.isHidden = false
         errorView.isHidden = true
+        spinner.startAnimating()
     }
 
     func webView(_ webView: WKWebView, didCommit navigation: WKNavigation!) {
@@ -160,22 +174,15 @@ final class ViewController: UIViewController, WKNavigationDelegate, WKUIDelegate
     func webView(_ webView: WKWebView, didFinish navigation: WKNavigation!) {
         loadingView.isHidden = true
         errorView.isHidden = true
+        spinner.stopAnimating()
     }
 
     func webView(_ webView: WKWebView, didFail navigation: WKNavigation!, withError error: Error) {
-        showError(error)
+        nextURL(after: error)
     }
 
     func webView(_ webView: WKWebView, didFailProvisionalNavigation navigation: WKNavigation!, withError error: Error) {
-        showError(error)
-    }
-
-    private func showError(_ error: Error) {
-        spinner.stopAnimating()
-        loadingView.isHidden = true
-        let ns = error as NSError
-        errorLabel.text = "Không thể kết nối máy chủ.\n\nMã lỗi: \(ns.code)"
-        errorView.isHidden = false
+        nextURL(after: error)
     }
 
     func webView(_ webView: WKWebView, createWebViewWith configuration: WKWebViewConfiguration,
