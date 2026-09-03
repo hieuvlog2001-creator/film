@@ -1,8 +1,8 @@
-# MisaMod Film — FIXED16
+# MisaMod Film — FIXED17
 
-Fixes the FIXED15 verification failure. The Xcode build succeeds, but generated Info.plist did not contain CFBundleIconName. This workflow explicitly adds `CFBundleIconName=AppIcon` to the final unsigned app before packaging, then validates it.
+Unsigned iOS IPA build.
+
+This version uses `SFSafariViewController` as the primary web container so the site is loaded through the same Safari web stack/network path instead of WKWebView. This is intended to resolve WKWebView `NSURLErrorDomain -1004` connection failures when Safari can reach the site.
 
 Bundle ID: `site.misamod.film`
-Version: 1.0.7 (Build 8)
-iOS 15+
-Unsigned IPA for eSign
+Version: `1.0.8` (Build `9`)
