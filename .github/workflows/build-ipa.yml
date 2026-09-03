@@ -1,0 +1,87 @@
+name: Build MisaMod Film - Unsigned IPA
+
+on:
+  workflow_dispatch:
+  push:
+    branches: ["main", "master"]
+
+permissions:
+  contents: read
+
+jobs:
+  build-unsigned:
+    runs-on: macos-15
+    timeout-minutes: 30
+    env:
+      PROJECT: MisaModFilm.xcodeproj
+      SCHEME: MisaModFilm
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Show Xcode
+        run: |
+          set -euo pipefail
+          xcodebuild -version
+          xcodebuild -showsdks | grep -E 'iphoneos|iOS' || true
+          xcodebuild -list -project "$PROJECT"
+
+      - name: Validate AppIcon source
+        run: |
+          set -euo pipefail
+          test -f MisaModFilm/Assets.xcassets/AppIcon.appiconset/Contents.json
+          python3 - <<'PY'
+          import json, os
+          p="MisaModFilm/Assets.xcassets/AppIcon.appiconset/Contents.json"
+          d=json.load(open(p))
+          imgs=d.get("images",[])
+          assert any(i.get("size")=="1024x1024" and i.get("scale")=="1x" for i in imgs)
+          for i in imgs:
+              f=i.get("filename")
+              if f:
+                  assert os.path.isfile("MisaModFilm/Assets.xcassets/AppIcon.appiconset/"+f), f
+          print("AppIcon OK:", len(imgs), "sizes")
+          PY
+
+      - name: Validate iOS project
+        run: |
+          set -euo pipefail
+          xcodebuild -project "$PROJECT"             -scheme "$SCHEME"             -configuration Release             -sdk iphoneos             -showBuildSettings | tee build-settings.txt
+          grep -q 'SDKROOT = iphoneos' build-settings.txt
+          grep -q 'ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon' build-settings.txt
+          grep -q 'PRODUCT_BUNDLE_IDENTIFIER = site.misamod.film' build-settings.txt
+
+      - name: Build unsigned iOS app
+        run: |
+          set -euo pipefail
+          rm -rf build Payload MisaModFilm-unsigned.ipa
+          xcodebuild build             -project "$PROJECT"             -scheme "$SCHEME"             -configuration Release             -sdk iphoneos             -derivedDataPath "$PWD/build"             SDKROOT=iphoneos             SUPPORTED_PLATFORMS="iphoneos iphonesimulator"             CODE_SIGNING_ALLOWED=NO             CODE_SIGNING_REQUIRED=NO             CODE_SIGN_IDENTITY=""
+
+      - name: Verify built app and icon
+        run: |
+          set -euo pipefail
+          APP="$PWD/build/Build/Products/Release-iphoneos/MisaMod Film.app"
+          test -d "$APP"
+          /usr/libexec/PlistBuddy -c "Print :CFBundleIdentifier" "$APP/Info.plist"
+          /usr/libexec/PlistBuddy -c "Print :CFBundleIconName" "$APP/Info.plist"
+          test -d "$APP/Assets.car"
+          echo "Built app OK"
+
+      - name: Package unsigned IPA
+        run: |
+          set -euo pipefail
+          APP="$PWD/build/Build/Products/Release-iphoneos/MisaMod Film.app"
+          mkdir -p Payload
+          cp -R "$APP" Payload/
+          /usr/bin/ditto -c -k --sequesterRsrc --keepParent Payload MisaModFilm-unsigned.ipa
+          test -s MisaModFilm-unsigned.ipa
+          unzip -l MisaModFilm-unsigned.ipa | grep -F 'Payload/MisaMod Film.app/Assets.car'
+          ls -lh MisaModFilm-unsigned.ipa
+
+      - name: Upload IPA artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: MisaMod-Film-unsigned-IPA
+          path: MisaModFilm-unsigned.ipa
+          if-no-files-found: error
+          retention-days: 14
